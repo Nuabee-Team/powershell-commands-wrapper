@@ -3,8 +3,8 @@
 A Python wrapper around `subprocess` to run PowerShell commands and retrieve
 their outputs.
 
-> **Tested on Windows only.** The package may work on Linux with
-> PowerShell (`pwsh`) installed, but this is not tested.
+> **Tested on Windows only.** The package may work on Linux with PowerShell
+> (`pwsh`) installed, but this is not tested.
 
 ## Installation
 
