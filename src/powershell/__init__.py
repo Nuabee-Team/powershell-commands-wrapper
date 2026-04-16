@@ -54,30 +54,31 @@ def _format_command(ps_command: Sequence[str]) -> str:
     ps_cmd = _ps_single_quote(cmd)
 
     # Named params hashtable
-    if named:
-        entries = []
-        for k, v in named:
-            if ":" in k:
-                confirm_cmd, confirm_val = k.split(":")
-                combined = f"{confirm_cmd} = {confirm_val}"
-                entries.append(combined)
-                continue
-            if v is None:
-                entries.append(f"{k} = $true")
+    entries = []
+    for k, v in named:
+        if ":" in k:
+            confirm_cmd, confirm_val = k.split(":")
+            combined = f"{confirm_cmd} = {confirm_val}"
+            entries.append(combined)
+        elif v is None:
+            entries.append(f"{k} = $true")
+        else:
+            # Keep numbers as numbers when possible for better binding
+            # (e.g., Get-Disk -Number expects UInt32)
+            if v.isdigit():
+                formatted_value = int(v)
             else:
-                # Keep numbers as numbers when possible for better binding
-                # (e.g., Get-Disk -Number expects UInt32)
-                if v.isdigit():
-                    entries.append(f"{k} = {int(v)}")
-                else:
-                    entries.append(f"{k} = {_ps_single_quote(v)}")
+                formatted_value = _ps_single_quote(v)
+            entries.append(f"{k} = {formatted_value}")
+
+    if entries:
         ps_params = "@{ " + "; ".join(entries) + " }"
-    else:
+    else: 
         ps_params = "@{}"
 
     # Positional args array
     if positional:
-        ps_pos = "@(" + ", ".join(_ps_single_quote(p) for p in positional) + ")"
+        ps_pos = "@(" + ", ".join(_ps_single_quote(p) for p in positional) + ")" if positional else "@()"
     else:
         ps_pos = "@()"
 
