@@ -1,4 +1,96 @@
 # serializer version: 1
+# name: test_custom_pwsh_path
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'pwsh',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='Write-Host'; $params=@{}; $pos=@('hello'); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
+# name: test_multiple_named_and_switch_params
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'powershell.exe',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='New-Partition'; $params=@{ DiskNumber = 106; UseMaximumSize = $true; DriveLetter = 'XYZ123' }; $pos=@(); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
+# name: test_named_numeric_param
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'powershell.exe',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='Get-Disk'; $params=@{ Number = 0 }; $pos=@(); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
+# name: test_named_string_param
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'powershell.exe',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='Get-Service'; $params=@{ Name = 'myservice' }; $pos=@(); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
 # name: test_simple_command
   _CallList([
     _Call(
@@ -11,6 +103,75 @@
           'Bypass',
           '-Command',
           "$ProgressPreference='SilentlyContinue'; $cmd='Write-Host'; $params=@{}; $pos=@('hello'); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
+# name: test_single_quote_escaping_in_named_param
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'powershell.exe',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='Get-Service'; $params=@{ Name = 'service''name' }; $pos=@(); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
+# name: test_single_quote_escaping_in_positional_arg
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'powershell.exe',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='Write-Host'; $params=@{}; $pos=@('it''s a test'); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
+# name: test_switch_param
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'powershell.exe',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='Remove-Item'; $params=@{ SomeForceParam = $true }; $pos=@('C:\\Temp\\some\\file.txt'); & $cmd @params @pos",
         ]),
       ),
       dict({

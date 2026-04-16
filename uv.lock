@@ -42,23 +42,21 @@ wheels = [
 name = "powershell-commands-wrapper"
 version = "0.1.0"
 source = { editable = "." }
-dependencies = [
-    { name = "syrupy" },
-]
 
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
     { name = "ruff" },
+    { name = "syrupy" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "syrupy", specifier = ">=5.1.0" }]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "ruff", specifier = ">=0.15" },
+    { name = "syrupy", specifier = ">=5.1.0" },
 ]
 
 [[package]]
