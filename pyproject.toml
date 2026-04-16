@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/Hugo-C/powershell-commands-wrapper"  # TODO
+Repository = "https://github.com/Nuabee-Team/powershell-commands-wrapper"
 
 [dependency-groups]
 dev = [
