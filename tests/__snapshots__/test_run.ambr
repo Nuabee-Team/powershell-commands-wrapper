@@ -1,4 +1,27 @@
 # serializer version: 1
+# name: test_colon_syntax_named_param
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'powershell.exe',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='Clear-Disk'; $params=@{ SuperConfirm = $false }; $pos=@(); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
 # name: test_custom_pwsh_path
   _CallList([
     _Call(
