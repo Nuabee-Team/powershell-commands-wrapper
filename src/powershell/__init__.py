@@ -20,8 +20,10 @@ class PowerShellError(Exception):
         super().__init__(message)
         self.result = result
 
+
 def _ps_single_quote(s: str) -> str:
     return "'" + s.replace("'", "''") + "'"
+
 
 def _format_command(ps_command: Sequence[str]) -> str:
     cmd = ps_command[0]
@@ -39,7 +41,9 @@ def _format_command(ps_command: Sequence[str]) -> str:
         if t.startswith("-") and len(t) > 1:
             name = t.lstrip("-")
             # Switch param if next token is absent or looks like another param
-            if i + 1 >= len(tokens) or (tokens[i + 1].startswith("-") and len(tokens[i + 1]) > 1):
+            if i + 1 >= len(tokens) or (
+                tokens[i + 1].startswith("-") and len(tokens[i + 1]) > 1
+            ):
                 named.append((name, None))  # switch
                 i += 1
             else:
@@ -73,12 +77,12 @@ def _format_command(ps_command: Sequence[str]) -> str:
 
     if entries:
         ps_params = "@{ " + "; ".join(entries) + " }"
-    else: 
+    else:
         ps_params = "@{}"
 
     # Positional args array
     if positional:
-        ps_pos = "@(" + ", ".join(_ps_single_quote(p) for p in positional) + ")" if positional else "@()"
+        ps_pos = "@(" + ", ".join(_ps_single_quote(p) for p in positional) + ")"
     else:
         ps_pos = "@()"
 
@@ -91,6 +95,7 @@ def _format_command(ps_command: Sequence[str]) -> str:
     )
     return invoke
 
+
 def _parse_result_as_json(result: PowerShellResult) -> Union[dict, list, None]:
     if result.stdout == "":
         return None
@@ -98,29 +103,30 @@ def _parse_result_as_json(result: PowerShellResult) -> Union[dict, list, None]:
     try:
         return json.loads(result.stdout)
     except json.JSONDecodeError as e:
-        raise PowerShellError(f"Invalid JSON returned", result) from e
+        raise PowerShellError("Invalid JSON returned", result) from e
+
 
 def run(
-        command: Sequence[str],
-        *,
-        as_json: bool = False,
-        json_depth: int = 5,
-        timeout: Optional[float] = 60,
-        pwsh_path: str = "powershell.exe",
-        raise_on_error: bool = True,
+    command: Sequence[str],
+    *,
+    as_json: bool = False,
+    json_depth: int = 5,
+    timeout: Optional[float] = 60,
+    pwsh_path: str = "powershell.exe",
+    raise_on_error: bool = True,
 ) -> Union[str, dict, list, None]:
     """Executes a PowerShell command
 
     Parameters:
-        command (Sequence[str]): A sequence of strings representing the PowerShell command 
+        command (Sequence[str]): A sequence of strings representing the PowerShell command
             and its arguments. Must be non-empty.
         as_json (bool, optional): If True, parses the PowerShell output as JSON. Defaults to False.
-        json_depth (int, optional): Specifies the depth for JSON parsing when as_json is True. 
+        json_depth (int, optional): Specifies the depth for JSON parsing when as_json is True.
             Defaults to 5.
-        timeout (Optional[float], optional): Maximum time, in seconds, to wait for the command 
+        timeout (Optional[float], optional): Maximum time, in seconds, to wait for the command
             to complete. Defaults to 60.
         pwsh_path (str, optional): Path to the PowerShell executable. Defaults to "powershell.exe".
-        raise_on_error (bool, optional): If True, raises an exception when the PowerShell 
+        raise_on_error (bool, optional): If True, raises an exception when the PowerShell
             command fails. Defaults to True.
 
     Examples:
@@ -178,6 +184,3 @@ def run(
     if as_json:
         return _parse_result_as_json(result)
     return result.stdout
-    
-
-    
