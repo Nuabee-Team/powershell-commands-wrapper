@@ -20,6 +20,8 @@ class PowerShellError(Exception):
         super().__init__(message)
         self.result = result
 
+def _ps_single_quote(s: str) -> str:
+    return "'" + s.replace("'", "''") + "'"
 
 def run(
         ps_command: Sequence[str],
@@ -57,15 +59,10 @@ def run(
         {'Name': 'Power', 'CanStop': False, } # more omitted
         >>> x = run_powershell(["Write-Host", "hello world"], as_json=True, raise_on_error=False)
         PowerShellError: JSON parse failed: Expecting value: line 1 column 1 (char 0)
-        
     """
-
     if not ps_command:
         raise ValueError("ps_command must be non-empty")
-    logger.debug("Running powershell command : %s", " ".join(ps_command))  # TODO log full edited command 
-
-    def ps_single_quote(s: str) -> str:
-        return "'" + s.replace("'", "''") + "'"
+    logger.debug("initial args: %s", " ".join(ps_command))
 
     cmd = ps_command[0]
     tokens = list(ps_command[1:])
@@ -94,7 +91,7 @@ def run(
             i += 1
 
     # Build PowerShell script
-    ps_cmd = ps_single_quote(cmd)
+    ps_cmd = _ps_single_quote(cmd)
 
     # Named params hashtable
     if named:
@@ -109,18 +106,18 @@ def run(
                 entries.append(f"{k} = $true")
             else:
                 # Keep numbers as numbers when possible for better binding
-                # (e.g. Get-Disk -Number expects UInt32)
+                # (e.g., Get-Disk -Number expects UInt32)
                 if v.isdigit():
                     entries.append(f"{k} = {int(v)}")
                 else:
-                    entries.append(f"{k} = {ps_single_quote(v)}")
+                    entries.append(f"{k} = {_ps_single_quote(v)}")
         ps_params = "@{ " + "; ".join(entries) + " }"
     else:
         ps_params = "@{}"
 
     # Positional args array
     if positional:
-        ps_pos = "@(" + ", ".join(ps_single_quote(p) for p in positional) + ")"
+        ps_pos = "@(" + ", ".join(_ps_single_quote(p) for p in positional) + ")"
     else:
         ps_pos = "@()"
 
@@ -137,6 +134,7 @@ def run(
     else:
         script = invoke
 
+    logger.info("Running powershell command %s", " ".join(script))
     args = [
         pwsh_path,
         "-NoProfile",
@@ -161,6 +159,7 @@ def run(
         stdout=completed.stdout,
         stderr=completed.stderr,
     )
+    logger.debug("Return code %s", completed.returncode)
 
     if result.returncode != 0 and raise_on_error:
         raise PowerShellError(f"PowerShell failed ({result.returncode})", result)
