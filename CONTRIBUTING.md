@@ -20,6 +20,7 @@ change the command-building logic, update the snapshots with:
 ```bash
 uv run pytest --snapshot-update
 ```
+
 then commit the changes (`.ambr` files).
 
 ## Linting and formatting
@@ -36,6 +37,7 @@ Releases are published to PyPI automatically when a `v*` tag is pushed:
 ```bash
 git tag v1.2.3
 ```
+
 Please respect semantic versioning.
 
 The GitHub Actions release workflow builds the package, runs tests, and
