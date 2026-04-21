@@ -23,47 +23,7 @@ class PowerShellError(Exception):
 def _ps_single_quote(s: str) -> str:
     return "'" + s.replace("'", "''") + "'"
 
-def run(
-        ps_command: Sequence[str],
-        *,
-        as_json: bool = False,
-        json_depth: int = 5,
-        timeout: Optional[float] = 60,
-        pwsh_path: str = "powershell.exe",
-        raise_on_error: bool = True,
-) -> Union[str, dict, list, None]:
-    """Executes a PowerShell command
-
-    Parameters:
-        ps_command (Sequence[str]): A sequence of strings representing the PowerShell command 
-            and its arguments. Must be non-empty.
-        as_json (bool, optional): If True, parses the PowerShell output as JSON. Defaults to False.
-        json_depth (int, optional): Specifies the depth for JSON parsing when as_json is True. 
-            Defaults to 5.
-        timeout (Optional[float], optional): Maximum time, in seconds, to wait for the command 
-            to complete. Defaults to 60.
-        pwsh_path (str, optional): Path to the PowerShell executable. Defaults to "powershell.exe".
-        raise_on_error (bool, optional): If True, raises an exception when the PowerShell 
-            command fails. Defaults to True.
-
-    Examples:
-        >>> run_powershell(
-        >>>      ["Write-Host", "hello world"],
-        >>>      raise_on_error=False,
-        >>> )
-        ...
-        >>> run_powershell(
-        >>>      ["Get-Process", "powershell"],
-        >>>      as_json=True,
-        >>> )
-        {'Name': 'Power', 'CanStop': False, } # more omitted
-        >>> x = run_powershell(["Write-Host", "hello world"], as_json=True, raise_on_error=False)
-        PowerShellError: JSON parse failed: Expecting value: line 1 column 1 (char 0)
-    """
-    if not ps_command:
-        raise ValueError("ps_command must be non-empty")
-    logger.debug("initial args: %s", " ".join(ps_command))
-
+def _format_command(ps_command: Sequence[str]) -> str:
     cmd = ps_command[0]
     tokens = list(ps_command[1:])
 
@@ -128,13 +88,63 @@ def run(
         f"$pos={ps_pos}; "
         f"& $cmd @params @pos"
     )
+    return invoke
 
+def _parse_result_as_json(result: PowerShellResult) -> Union[dict, list, None]:
+    if result.stdout == "":
+        return None
+
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        raise PowerShellError(f"Invalid JSON returned", result) from e
+
+def run(
+        command: Sequence[str],
+        *,
+        as_json: bool = False,
+        json_depth: int = 5,
+        timeout: Optional[float] = 60,
+        pwsh_path: str = "powershell.exe",
+        raise_on_error: bool = True,
+) -> Union[str, dict, list, None]:
+    """Executes a PowerShell command
+
+    Parameters:
+        command (Sequence[str]): A sequence of strings representing the PowerShell command 
+            and its arguments. Must be non-empty.
+        as_json (bool, optional): If True, parses the PowerShell output as JSON. Defaults to False.
+        json_depth (int, optional): Specifies the depth for JSON parsing when as_json is True. 
+            Defaults to 5.
+        timeout (Optional[float], optional): Maximum time, in seconds, to wait for the command 
+            to complete. Defaults to 60.
+        pwsh_path (str, optional): Path to the PowerShell executable. Defaults to "powershell.exe".
+        raise_on_error (bool, optional): If True, raises an exception when the PowerShell 
+            command fails. Defaults to True.
+
+    Examples:
+        >>> run_powershell(
+        >>>      ["Write-Host", "hello world"],
+        >>>      raise_on_error=False,
+        >>> )
+        ...
+        >>> run_powershell(
+        >>>      ["Get-Process", "powershell"],
+        >>>      as_json=True,
+        >>> )
+        {'Name': 'Power', 'CanStop': False, } # more omitted
+        >>> x = run_powershell(["Write-Host", "hello world"], as_json=True, raise_on_error=False)
+        PowerShellError: JSON parse failed: Expecting value: line 1 column 1 (char 0)
+    """
+    if not command:
+        raise ValueError("command must be non-empty")
+    logger.debug("initial args: %s", " ".join(command))
+
+    formatted_command = _format_command(command)
     if as_json:
-        script = f"{invoke} | ConvertTo-Json -Depth {int(json_depth)}"
-    else:
-        script = invoke
+        formatted_command += f" | ConvertTo-Json -Depth {int(json_depth)}"
 
-    logger.info("Running powershell command %s", " ".join(script))
+    logger.info("Running powershell command %s", " ".join(formatted_command))
     args = [
         pwsh_path,
         "-NoProfile",
@@ -142,7 +152,7 @@ def run(
         "-ExecutionPolicy",
         "Bypass",
         "-Command",
-        script,
+        formatted_command,
     ]
 
     completed = subprocess.run(
@@ -152,27 +162,21 @@ def run(
         timeout=timeout,
         shell=False,
     )
+    logger.debug("Return code %s", completed.returncode)
 
     result = PowerShellResult(
         command=args,
         returncode=completed.returncode,
-        stdout=completed.stdout,
+        stdout=completed.stdout.strip(),
         stderr=completed.stderr,
     )
-    logger.debug("Return code %s", completed.returncode)
 
     if result.returncode != 0 and raise_on_error:
         raise PowerShellError(f"PowerShell failed ({result.returncode})", result)
 
-    out = result.stdout.strip()
+    if as_json:
+        return _parse_result_as_json(result)
+    return result.stdout
+    
 
-    if not as_json:
-        return out
-
-    if out == "":
-        return None
-
-    try:
-        return json.loads(out)
-    except json.JSONDecodeError as e:
-        raise PowerShellError(f"Invalid JSON returned", result) from e
+    
