@@ -151,7 +151,7 @@ def run(
     if as_json:
         formatted_command += f" | ConvertTo-Json -Depth {int(json_depth)}"
 
-    logger.info("Running powershell command %s", " ".join(formatted_command))
+    logger.info("Running powershell command %s", formatted_command)
     args = [
         pwsh_path,
         "-NoProfile",
