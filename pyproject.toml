@@ -3,12 +3,23 @@ name = "powershell-commands-wrapper"
 version = "0.1.0"
 description = "Wrapper around subprocess to execute powershell commands locally from python code and retrieve its result"
 readme = "README.md"
+license = { text = "MIT" }
 authors = [
     { name = "Nuabee team", email = "contact@nuabee.fr" }
+]
+keywords = ["powershell", "windows", "automation"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Operating System :: Microsoft :: Windows",
+    "Intended Audience :: Developers",
 ]
 requires-python = ">=3.11"
 dependencies = [
 ]
+
+[project.urls]
+Repository = "https://github.com/Hugo-C/powershell-commands-wrapper"  # TODO
 
 [dependency-groups]
 dev = [

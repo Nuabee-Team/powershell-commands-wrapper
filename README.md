@@ -1,24 +1,57 @@
-# uv trusted publishing examples
+# powershell-commands-wrapper
 
-Trusted publishing allows uploading package from GitHub Action to PyPI without
-manually setting a secret token. Instead, you specify on PyPI a GitHub Actions
-workflow that is allowed to publish the package.
+A Python wrapper around `subprocess` to run PowerShell commands and retrieve
+their outputs.
 
-This repository contains a full, self-contained example for trusted publishing
-with uv. The release workflow can be found in
-[.github/workflows/release.yml](.github/workflows/release.yml). On PyPI, the
-matching configuration is set under
-`https://pypi.org/manage/project/<package-name>/settings/publishing/`:
+> **Tested on Windows only.** The package may work on Linux with
+> PowerShell (`pwsh`) installed, but this is not tested.
 
-You can find the published package at
-https://pypi.org/project/trusted-publishing-examples/.
+## Installation
 
-[.github/workflows/ci.yml](.github/workflows/ci.yml) is a minimal test and lint
-workflow for a Python package, while
-[.github/workflows/errors.yml](.github/workflows/errors.yml) is for testing uv
-itself only.
+```bash
+pip install powershell-commands-wrapper
+```
 
-## Documentation
+## Usage
 
-- uv's side: https://docs.astral.sh/uv/guides/publish/
-- PyPI's side: https://docs.pypi.org/trusted-publishers/
+Commands are expressed as a list of strings — the first element is the cmdlet
+name, followed by its arguments.
+
+```python
+import powershell
+
+stdout = powershell.run(["Write-Host", "hello world"])
+# stdout = "hello world"
+```
+
+### JSON output
+
+Pass `as_json=True` to retrieve the output as a JSON object:
+
+```python
+import powershell
+
+disks = powershell.run(["Get-Disk"], as_json=True)
+# disks = [{"Size": 10737418240, "DiskNumber": 1, "PartitionStyle": "MBR", ...}]
+```
+
+### Error handling
+
+By default a `powershell.PowerShellError` is raised when the exit code is
+non-zero. Set `raise_on_error=False` to suppress this:
+
+```python
+try:
+    powershell.run(["Some-Command"])
+except powershell.PowerShellError as e:
+    print(e.result.returncode)
+    print(e.result.stderr)
+
+# Or ignore errors entirely
+powershell.run(["Some-Command"], raise_on_error=False)
+```
+
+## About Nuabee
+
+This package is maintained by [Nuabee](https://nuabee.fr), a company that helps
+businesses improve their IT resiliency.
