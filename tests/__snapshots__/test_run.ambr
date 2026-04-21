@@ -1,0 +1,24 @@
+# serializer version: 1
+# name: test_simple_command
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'powershell.exe',
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          "$ProgressPreference='SilentlyContinue'; $cmd='Write-Host'; $params=@{}; $pos=@('hello'); & $cmd @params @pos",
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'shell': False,
+        'text': True,
+        'timeout': 60,
+      }),
+    ),
+  ])
+# ---
