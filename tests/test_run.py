@@ -50,6 +50,14 @@ def test_multiple_named_and_switch_params(mocked_subprocess_run, snapshot):
     assert mocked_subprocess_run.call_args_list == snapshot
 
 
+def test_colon_syntax_named_param(mocked_subprocess_run, snapshot):
+    mocked_subprocess_run.set_result(stdout="")
+    
+    powershell.run(["Clear-Disk", "-SuperConfirm:$false"])
+
+    assert mocked_subprocess_run.call_args_list == snapshot
+
+
 def test_as_json_should_return_parsed_dict(mocked_subprocess_run):
     expected_stdout = {"Name": "foo", "Value": 42}
     mocked_subprocess_run.set_result(stdout=json.dumps(expected_stdout))
