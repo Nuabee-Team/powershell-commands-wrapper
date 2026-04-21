@@ -15,7 +15,7 @@ class PowerShellResult:
     stderr: str
 
 
-class PowerShellError(RuntimeError):
+class PowerShellError(Exception):
     def __init__(self, message: str, result: PowerShellResult):
         super().__init__(message)
         self.result = result
@@ -29,16 +29,35 @@ def run(
         timeout: Optional[float] = 60,
         pwsh_path: str = "powershell.exe",
         raise_on_error: bool = True,
-) -> Union[str, dict, list]:
-    """
-    TODO 
-    examples:
-    run_powershell(  # Required to clear the disk, otherwise it will be offline
-            ["Initialize-Disk", "-Number", str(output_disk_number), "-PartitionStyle", str(partition_type.value)],
-            raise_on_error=False,
-        )
+) -> Union[str, dict, list, None]:
+    """Executes a PowerShell command
 
-    x = run_powershell(["Get-Service", "-Name", f"{CYBEE_WINDOWS_SERVICE_NAME}*"], as_json=True)
+    Parameters:
+        ps_command (Sequence[str]): A sequence of strings representing the PowerShell command 
+            and its arguments. Must be non-empty.
+        as_json (bool, optional): If True, parses the PowerShell output as JSON. Defaults to False.
+        json_depth (int, optional): Specifies the depth for JSON parsing when as_json is True. 
+            Defaults to 5.
+        timeout (Optional[float], optional): Maximum time, in seconds, to wait for the command 
+            to complete. Defaults to 60.
+        pwsh_path (str, optional): Path to the PowerShell executable. Defaults to "powershell.exe".
+        raise_on_error (bool, optional): If True, raises an exception when the PowerShell 
+            command fails. Defaults to True.
+
+    Examples:
+        >>> run_powershell(
+        >>>      ["Write-Host", "hello world"],
+        >>>      raise_on_error=False,
+        >>> )
+        ...
+        >>> run_powershell(
+        >>>      ["Get-Process", "powershell"],
+        >>>      as_json=True,
+        >>> )
+        {'Name': 'Power', 'CanStop': False, } # more omitted
+        >>> x = run_powershell(["Write-Host", "hello world"], as_json=True, raise_on_error=False)
+        PowerShellError: JSON parse failed: Expecting value: line 1 column 1 (char 0)
+        
     """
 
     if not ps_command:
@@ -143,7 +162,7 @@ def run(
         stderr=completed.stderr,
     )
 
-    if raise_on_error and result.returncode != 0:
+    if result.returncode != 0 and raise_on_error:
         raise PowerShellError(f"PowerShell failed ({result.returncode})", result)
 
     out = result.stdout.strip()
@@ -157,4 +176,4 @@ def run(
     try:
         return json.loads(out)
     except json.JSONDecodeError as e:
-        raise PowerShellError(f"JSON parse failed: {e}", result)
+        raise PowerShellError(f"Invalid JSON returned", result) from e
