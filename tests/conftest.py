@@ -12,6 +12,4 @@ def mocked_subprocess_run():
 
 def fake_subprocess_result(mocked_subprocess_run, stdout, stderr="", returncode=0):
     """Helper to set the result of the mocked subprocess.run"""
-    def _mock_call(args, *other_args, **kwargs):
-        return MagicMock(command=args, stdout=stdout, stderr=stderr, returncode=returncode)
-    mocked_subprocess_run.side_effect = _mock_call
+    mocked_subprocess_run.return_value =  MagicMock(stdout=stdout, stderr=stderr, returncode=returncode)
