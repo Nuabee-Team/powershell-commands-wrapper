@@ -25,6 +25,7 @@ Repository = "https://github.com/Nuabee-Team/powershell-commands-wrapper"
 dev = [
     "syrupy>=5.1.0",
     "pytest>=9.0.3",
+    "pytest-cov>=6.0",
     "ruff>=0.15",
 ]
 

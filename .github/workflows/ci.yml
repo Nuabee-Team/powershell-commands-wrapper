@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - master
 
 permissions: {}
 
@@ -37,4 +37,13 @@ jobs:
         with:
           persist-credentials: false
       - uses: hynek/setup-cached-uv@4300ec2180bc77d705e626a34e381b81a4772c51 # v2.5.0
-      - run: uv run pytest
+      - name: Run tests with coverage
+        run: |
+          uv run pytest --cov=src/powershell --cov-report=term-missing --cov-report=xml
+          uv tool install coverage
+  
+          # Report and write to summary.
+          coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+  
+          # Report again and fail if under 100%.
+          coverage report --fail-under=100
